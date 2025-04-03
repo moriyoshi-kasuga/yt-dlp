@@ -456,35 +456,42 @@ impl DownloadManager {
 
                 // Add progress callback if available
                 let task_id = task.id;
-                let statuses_for_callback = statuses_clone.clone();
 
                 if let Some(callback) = task.progress_callback {
+                    let statuses_for_callback = statuses_clone.clone();
                     fetcher = fetcher.with_progress_callback(move |downloaded, total| {
-                        // Update status with progress
-                        let mut statuses = statuses_for_callback.blocking_lock();
-                        statuses.insert(
-                            task_id,
-                            DownloadStatus::Downloading {
-                                downloaded_bytes: downloaded,
-                                total_bytes: total,
-                            },
-                        );
+                        let callback = callback.clone();
+                        let statuses_for_callback = statuses_for_callback.clone();
+                        async move {
+                            // Update status with progress
+                            let mut statuses = statuses_for_callback.lock().await;
+                            statuses.insert(
+                                task_id,
+                                DownloadStatus::Downloading {
+                                    downloaded_bytes: downloaded,
+                                    total_bytes: total,
+                                },
+                            );
 
-                        // Call the original callback
-                        callback(downloaded, total);
+                            // Call the original callback
+                            callback(downloaded, total);
+                        }
                     });
                 } else {
                     // Default callback that just updates the status
                     let statuses_for_callback = statuses_clone.clone();
                     fetcher = fetcher.with_progress_callback(move |downloaded, total| {
-                        let mut statuses = statuses_for_callback.blocking_lock();
-                        statuses.insert(
-                            task_id,
-                            DownloadStatus::Downloading {
-                                downloaded_bytes: downloaded,
-                                total_bytes: total,
-                            },
-                        );
+                        let statuses_for_callback = statuses_for_callback.clone();
+                        async move {
+                            let mut statuses = statuses_for_callback.lock().await;
+                            statuses.insert(
+                                task_id,
+                                DownloadStatus::Downloading {
+                                    downloaded_bytes: downloaded,
+                                    total_bytes: total,
+                                },
+                            );
+                        }
                     });
                 }
 

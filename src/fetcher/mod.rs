@@ -12,6 +12,7 @@ use reqwest::header::{HeaderMap, HeaderValue, RANGE, USER_AGENT};
 use std::cmp::min;
 use std::fmt;
 use std::path::Path;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
@@ -26,7 +27,10 @@ pub mod thumbnail;
 struct SegmentContext {
     file: Arc<Mutex<tokio::fs::File>>,
     downloaded_bytes: Arc<std::sync::atomic::AtomicU64>,
-    progress_callback: Option<Arc<dyn Fn(u64, u64) + Send + Sync>>,
+    #[allow(clippy::complexity)]
+    progress_callback: Option<
+        Arc<dyn Fn(u64, u64) -> Pin<Box<dyn Future<Output = ()> + Send + Sync>> + Send + Sync>,
+    >,
     total_bytes: u64,
 }
 
@@ -43,8 +47,10 @@ pub struct Fetcher {
     /// The number of download attempts in case of failure.
     retry_attempts: usize,
     /// Callback optional for tracking download progress
-    #[allow(clippy::type_complexity)]
-    progress_callback: Option<Arc<dyn Fn(u64, u64) + Send + Sync>>,
+    #[allow(clippy::complexity)]
+    progress_callback: Option<
+        Arc<dyn Fn(u64, u64) -> Pin<Box<dyn Future<Output = ()> + Send + Sync>> + Send + Sync>,
+    >,
 }
 
 impl fmt::Display for Fetcher {
@@ -108,11 +114,12 @@ impl Fetcher {
     /// # Arguments
     ///
     /// * `callback` - A function that will be called with the downloaded size and total size.
-    pub fn with_progress_callback<F>(mut self, callback: F) -> Self
+    pub fn with_progress_callback<F, Fut>(mut self, callback: F) -> Self
     where
-        F: Fn(u64, u64) + Send + Sync + 'static,
+        F: Send + Sync + 'static + Fn(u64, u64) -> Fut,
+        Fut: Send + Sync + 'static + Future<Output = ()>,
     {
-        self.progress_callback = Some(Arc::new(callback));
+        self.progress_callback = Some(Arc::new(move |a, b| Box::pin(callback(a, b))));
         self
     }
 
@@ -414,7 +421,7 @@ impl Fetcher {
 
         // Call the callback one last time to indicate that the download is complete
         if let Some(callback) = &self.progress_callback {
-            callback(total_bytes, total_bytes);
+            callback(total_bytes, total_bytes).await;
         }
 
         // Remove the temporary file
@@ -512,7 +519,7 @@ impl Fetcher {
 
         // Call the progress callback if available
         if let Some(callback) = &context.progress_callback {
-            callback(new_total, context.total_bytes);
+            callback(new_total, context.total_bytes).await;
         }
 
         Ok(())
@@ -634,7 +641,7 @@ impl Fetcher {
 
             // Call progress callback if available
             if let Some(callback) = &self.progress_callback {
-                callback(downloaded_bytes, total_bytes);
+                callback(downloaded_bytes, total_bytes).await;
             }
 
             // Write the buffer when it reaches a certain size
