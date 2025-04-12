@@ -27,8 +27,8 @@
   <a href="https://crates.io/crates/yt-dlp">
     <img src="https://img.shields.io/github/v/release/boul2gom/yt-dlp?label=Release&logo=Rust" alt="Release"/>
   </a>
-  <a href="https://github.com/boul2gom/yt-dlp/blob/develop/LICENSE.md">
-    <img src="https://img.shields.io/github/license/boul2gom/yt-dlp?label=License&logo=Github" alt="License">
+  <a href="https://crates.io/crates/yt-dlp">
+    <img src="https://img.shields.io/crates/d/yt-dlp?label=Downloads&logo=Rust" alt="Downloads"/>
   </a>
 </p>
 <p align="center">
@@ -41,26 +41,21 @@
   <a href="https://github.com/boul2gom/yt-dlp/pulls">
     <img src="https://img.shields.io/github/issues-pr-raw/boul2gom/yt-dlp?label=Pull requests&logo=Github" alt="Pull requests">
   </a>
+</p>
+<p align="center">
+  <a href="https://github.com/boul2gom/yt-dlp/blob/develop/LICENSE.md">
+    <img src="https://img.shields.io/github/license/boul2gom/yt-dlp?label=License&logo=Github" alt="License">
+  </a>
   <a href="https://github.com/boul2gom/yt-dlp/stargazers">
     <img src="https://img.shields.io/github/stars/boul2gom/yt-dlp?label=Stars&logo=Github" alt="Stars">
   </a>
   <a href="https://github.com/boul2gom/yt-dlp/fork">
     <img src="https://img.shields.io/github/forks/boul2gom/yt-dlp?label=Forks&logo=Github" alt="Forks">
   </a>
-</p>
+</p>  
 
 <p align="center">
-    🚧 Few stats and tools scores about the project: 
-</p>
-<p align="center">
-  <a href="https://scorecard.dev/viewer/?uri=github.com/boul2gom/yt-dlp">
-    <img src="https://img.shields.io/ossf-scorecard/github.com/boul2gom/yt-dlp?label=Scorecard&logo=SecurityScorecard" alt="OpenSSF Scorecard"/>
-  </a>
-  <a href="https://crates.io/crates/yt-dlp">
-    <img src="https://img.shields.io/crates/d/yt-dlp?label=Downloads&logo=Rust" alt="Downloads"/>
-  </a>
-  <img src="https://img.shields.io/sonar/tech_debt/boul2gom_yt-dlp?server=https%3A%2F%2Fsonarcloud.io&label=Tech%20Debt&logo=SonarCloud" alt="Tech Debt"/>
-  <img src="https://img.shields.io/codefactor/grade/github/boul2gom/yt-dlp/develop?label=Quality&logo=Codefactor" alt="Codefactor">
+  <img src="https://repobeats.axiom.co/api/embed/81fed25250909bb618c0180c8092c143feae0616.svg" alt="Statistics" title="Repobeats analytics image" />
 </p>
 
 ---
@@ -80,7 +75,7 @@ Using an external program is not ideal, but it is the most reliable and maintain
 Add the following to your `Cargo.toml` file:
 ```toml
 [dependencies]
-yt-dlp = "1.3.2"
+yt-dlp = "1.3.3"
 ```
 
 A new release is automatically published every two weeks, to keep up to date with dependencies and features.
@@ -94,6 +89,8 @@ available.
 
 - **`tracing`** — <img align="center" width="20" alt="Tracing" src="https://raw.githubusercontent.com/tokio-rs/tracing/refs/heads/master/assets/logo.svg" /> Enables profiling with the [```tracing```](https://crates.io/crates/tracing) crate.
   When this feature is enabled, the library will output span events at log levels `trace` and `debug`, depending on the importance of the called function.
+- **`rustls`** - Enables the `rustls-tls` feature in the [```reqwest```](https://crates.io/crates/reqwest) crate.
+  This enables building the application without openssl or other system sourced SSL libraries.
 
 #### 📝 Profiling with `tracing` (disabled by default):
 The crate supports the `tracing` feature to enable profiling, which can be useful for debugging.
